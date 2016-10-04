@@ -9,15 +9,14 @@ import (
 	"github.com/go-mangos/mangos"
 	"github.com/go-mangos/mangos/protocol/rep"
 	"github.com/go-mangos/mangos/transport/tcp"
-	"github.com/tylertreat/Flotilla/flotilla-server/daemon/broker/activemq"
-	"github.com/tylertreat/Flotilla/flotilla-server/daemon/broker/amqp"
-	"github.com/tylertreat/Flotilla/flotilla-server/daemon/broker/amqp/rabbitmq"
-	"github.com/tylertreat/Flotilla/flotilla-server/daemon/broker/beanstalkd"
-	"github.com/tylertreat/Flotilla/flotilla-server/daemon/broker/kafka"
-	"github.com/tylertreat/Flotilla/flotilla-server/daemon/broker/kestrel"
-	"github.com/tylertreat/Flotilla/flotilla-server/daemon/broker/nats"
-	"github.com/tylertreat/Flotilla/flotilla-server/daemon/broker/nsq"
-	"github.com/tylertreat/Flotilla/flotilla-server/daemon/broker/pubsub"
+	"github.com/jack0/Flotilla/flotilla-server/daemon/broker/activemq"
+	"github.com/jack0/Flotilla/flotilla-server/daemon/broker/amqp"
+	"github.com/jack0/Flotilla/flotilla-server/daemon/broker/amqp/rabbitmq"
+	"github.com/jack0/Flotilla/flotilla-server/daemon/broker/beanstalkd"
+	"github.com/jack0/Flotilla/flotilla-server/daemon/broker/kafka"
+	"github.com/jack0/Flotilla/flotilla-server/daemon/broker/nats"
+	"github.com/jack0/Flotilla/flotilla-server/daemon/broker/nsq"
+	"github.com/jack0/Flotilla/flotilla-server/daemon/broker/pubsub"
 )
 
 type daemon string
@@ -38,7 +37,6 @@ const (
 	NATS        = "nats"
 	Beanstalkd  = "beanstalkd"
 	Kafka       = "kafka"
-	Kestrel     = "kestrel"
 	ActiveMQ    = "activemq"
 	RabbitMQ    = "rabbitmq"
 	NSQ         = "nsq"
@@ -224,8 +222,6 @@ func (d *Daemon) processBrokerStart(broker, host, port string) (interface{}, err
 		d.broker = &beanstalkd.Broker{}
 	case Kafka:
 		d.broker = &kafka.Broker{}
-	case Kestrel:
-		d.broker = &kestrel.Broker{}
 	case ActiveMQ:
 		d.broker = &activemq.Broker{}
 	case RabbitMQ:
@@ -235,7 +231,6 @@ func (d *Daemon) processBrokerStart(broker, host, port string) (interface{}, err
 	case CloudPubSub:
 		d.broker = &pubsub.Broker{
 			ProjectID: d.config.GoogleCloudProjectID,
-			JSONKey:   d.config.GoogleCloudJSONKey,
 		}
 	default:
 		return "", fmt.Errorf("Invalid broker %s", broker)
@@ -353,8 +348,6 @@ func (d *Daemon) newPeer(broker, host string) (peer, error) {
 		return beanstalkd.NewPeer(host)
 	case Kafka:
 		return kafka.NewPeer(host)
-	case Kestrel:
-		return kestrel.NewPeer(host)
 	case ActiveMQ:
 		return activemq.NewPeer(host)
 	case RabbitMQ:
@@ -364,7 +357,6 @@ func (d *Daemon) newPeer(broker, host string) (peer, error) {
 	case CloudPubSub:
 		return pubsub.NewPeer(
 			d.config.GoogleCloudProjectID,
-			d.config.GoogleCloudJSONKey,
 		)
 	default:
 		return nil, fmt.Errorf("Invalid broker: %s", broker)

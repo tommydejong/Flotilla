@@ -2,45 +2,42 @@ package pubsub
 
 import (
 	"errors"
-	"io/ioutil"
 	"log"
 
+	"cloud.google.com/go/pubsub"
 	"golang.org/x/net/context"
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
-	"google.golang.org/cloud"
-	"google.golang.org/cloud/pubsub"
 )
 
-const topic = "test"
+const topicName = "test"
 
 // Broker implements the broker interface for Google Cloud Pub/Sub.
 type Broker struct {
 	ProjectID string
-	JSONKey   string
 }
 
 // Start will start the message broker and prepare it for testing.
 func (c *Broker) Start(host, port string) (interface{}, error) {
-	ctx, err := newContext(c.ProjectID, c.JSONKey)
+	ctx := context.Background()
+	client, err := newClient(ctx, c.ProjectID)
 	if err != nil {
 		return "", err
 	}
 
-	exists, err := pubsub.TopicExists(ctx, topic)
+	topic := client.Topic(topicName)
+	exists, err := topic.Exists(ctx)
 	if err != nil {
 		log.Printf("Failed to check Cloud Pub/Sub topic: %s", err.Error())
 		return "", err
 	}
 
 	if exists {
-		if err := pubsub.DeleteTopic(ctx, topic); err != nil {
+		if err := topic.Delete(ctx); err != nil {
 			log.Printf("Failed to delete Cloud Pub/Sub topic: %s", err.Error())
 			return "", err
 		}
 	}
 
-	if err := pubsub.CreateTopic(ctx, topic); err != nil {
+	if _, err := client.CreateTopic(ctx, topicName); err != nil {
 		log.Printf("Failed to create Cloud Pub/Sub topic: %s", err.Error())
 		return "", err
 	}
@@ -52,12 +49,14 @@ func (c *Broker) Start(host, port string) (interface{}, error) {
 
 // Stop will stop the message broker.
 func (c *Broker) Stop() (interface{}, error) {
-	ctx, err := newContext(c.ProjectID, c.JSONKey)
+	ctx := context.Background()
+	client, err := newClient(ctx, c.ProjectID)
 	if err != nil {
 		return "", err
 	}
 
-	if err := pubsub.DeleteTopic(ctx, topic); err != nil {
+	topic := client.Topic(topicName)
+	if err := topic.Delete(ctx); err != nil {
 		log.Printf("Failed to delete Cloud Pub/Sub topic: %s", err.Error())
 		return "", err
 	}
@@ -66,29 +65,15 @@ func (c *Broker) Stop() (interface{}, error) {
 	return "", err
 }
 
-func newContext(projectID, jsonKey string) (context.Context, error) {
+func newClient(ctx context.Context, projectID string) (*pubsub.Client, error) {
 	if projectID == "" {
-		return nil, errors.New("project id not provided")
+		return &pubsub.Client{}, errors.New("project id not provided")
 	}
 
-	if jsonKey == "" {
-		return nil, errors.New("JSON key not provided")
-	}
-
-	key, err := ioutil.ReadFile(jsonKey)
+	client, err := pubsub.NewClient(ctx, projectID)
 	if err != nil {
-		return nil, err
+		return &pubsub.Client{}, err
 	}
 
-	conf, err := google.JWTConfigFromJSON(
-		key,
-		pubsub.ScopeCloudPlatform,
-		pubsub.ScopePubSub,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	ctx := cloud.NewContext(projectID, conf.Client(oauth2.NoContext))
-	return ctx, nil
+	return client, nil
 }

@@ -6,22 +6,23 @@ import (
 	"strings"
 	"sync/atomic"
 
+	"cloud.google.com/go/pubsub"
 	"golang.org/x/net/context"
-	"google.golang.org/cloud/pubsub"
 
-	"github.com/tylertreat/Flotilla/flotilla-server/daemon/broker"
+	"github.com/jack0/Flotilla/flotilla-server/daemon/broker"
 )
 
 const (
 	stopped = 1
 
-	// bufferSize is the number of messages we try to publish and consume at a
+	// batchSize is the number of messages we try to publish and consume at a
 	// time to increase throughput. TODO: this might need tweaking.
-	bufferSize = 100
+	batchSize = 100
 )
 
 // Peer implements the peer interface for Google Cloud Pub/Sub.
 type Peer struct {
+	client       *pubsub.Client
 	context      context.Context
 	subscription string
 	messages     chan []byte
@@ -36,13 +37,15 @@ type Peer struct {
 
 // NewPeer creates and returns a new Peer for communicating with Google Cloud
 // Pub/Sub.
-func NewPeer(projectID, jsonKey string) (*Peer, error) {
-	ctx, err := newContext(projectID, jsonKey)
+func NewPeer(projectID string) (*Peer, error) {
+	ctx := context.Background()
+	client, err := newClient(ctx, projectID)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Peer{
+		client:   client,
 		context:  ctx,
 		messages: make(chan []byte, 10000),
 		acks:     make(chan []string, 100),
@@ -60,7 +63,8 @@ func (c *Peer) Subscribe() error {
 	// lowercase letter or number, and contain only lowercase letters, numbers,
 	// dashes, underscores or periods.
 	c.subscription = strings.ToLower(fmt.Sprintf("x%sx", broker.GenerateName()))
-	exists, err := pubsub.SubExists(c.context, c.subscription)
+	sub := c.client.Subscription(c.subscription)
+	exists, err := sub.Exists(c.context)
 	if err != nil {
 		return err
 	}
@@ -69,7 +73,9 @@ func (c *Peer) Subscribe() error {
 		return fmt.Errorf("Subscription %s already exists", c.subscription)
 	}
 
-	if err := pubsub.CreateSub(c.context, c.subscription, topic, 0, ""); err != nil {
+	topic := c.client.Topic(topicName)
+
+	if _, err := c.client.CreateSubscription(c.context, c.subscription, topic, 0, nil); err != nil {
 		return err
 	}
 
@@ -78,16 +84,19 @@ func (c *Peer) Subscribe() error {
 	go func() {
 		// TODO: Can we avoid using atomic flag?
 		for atomic.LoadInt32(&c.stopped) != stopped {
-			messages, err := pubsub.PullWait(c.context, c.subscription, bufferSize)
+			messages, err := sub.Pull(c.context, pubsub.MaxPrefetch(batchSize))
 			if err != nil {
 				// Timed out.
 				continue
 			}
 
-			ids := make([]string, len(messages))
-			for i, message := range messages {
-				ids[i] = message.AckID
+			ids := make([]string, 0)
+			i := 0
+			for message, err := messages.Next(); err != pubsub.Done; message, err = messages.Next() {
+				ids[i] = message.ID
 				c.messages <- message.Data
+				message.Done(true)
+				i++
 			}
 			c.acks <- ids
 		}
@@ -119,23 +128,25 @@ func (c *Peer) Done() {
 
 // Setup prepares the peer for testing.
 func (c *Peer) Setup() {
-	buffer := make([]*pubsub.Message, bufferSize)
+	buffer := make([]*pubsub.Message, batchSize)
 	go func() {
 		i := 0
 		for {
+			topic := c.client.Topic(topicName)
 			select {
 			case msg := <-c.send:
 				buffer[i] = &pubsub.Message{Data: msg}
 				i++
-				if i == bufferSize {
-					if _, err := pubsub.Publish(c.context, topic, buffer...); err != nil {
+				if i == batchSize {
+					if _, err := topic.Publish(c.context, buffer[i]); err != nil {
 						c.errors <- err
 					}
 					i = 0
 				}
 			case <-c.done:
 				if i > 0 {
-					if _, err := pubsub.Publish(c.context, topic, buffer[0:i]...); err != nil {
+
+					if _, err := topic.Publish(c.context, buffer[0:i]...); err != nil {
 						c.errors <- err
 					}
 				}
@@ -151,7 +162,8 @@ func (c *Peer) Setup() {
 func (c *Peer) Teardown() {
 	atomic.StoreInt32(&c.stopped, stopped)
 	c.ackDone <- true
-	pubsub.DeleteSub(c.context, c.subscription)
+	sub := c.client.Subscription(c.subscription)
+	sub.Delete(c.context)
 }
 
 func (c *Peer) ack() {
@@ -159,7 +171,7 @@ func (c *Peer) ack() {
 		select {
 		case ids := <-c.acks:
 			if len(ids) > 0 {
-				if err := pubsub.Ack(c.context, c.subscription, ids...); err != nil {
+				if err := pubsub.Done; err != nil {
 					log.Println("Failed to ack messages")
 				}
 			}

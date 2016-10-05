@@ -1,9 +1,14 @@
 package nats
 
 import (
-	"fmt"
+	"context"
 	"log"
-	"os/exec"
+	"time"
+
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/client"
+	"github.com/docker/go-connections/nat"
 )
 
 const (
@@ -18,28 +23,45 @@ type Broker struct {
 
 // Start will start the message broker and prepare it for testing.
 func (n *Broker) Start(host, port string) (interface{}, error) {
-	containerID, err := exec.Command("/bin/sh", "-c",
-		fmt.Sprintf("docker run -d -p %s:%s %s", port, internalPort, gnatsd)).Output()
+	cli, err := client.NewEnvClient()
+	ctx := context.Background()
+
+	_ = cli.ContainerRemove(ctx, "nats-benchmark", types.ContainerRemoveOptions{Force: true})
+
+	portMap, portBindings, err := nat.ParsePortSpecs([]string{"4222:4222/tcp", "6222:6222/tcp"})
+
+	container, err := cli.ContainerCreate(ctx, &container.Config{Image: "nats", ExposedPorts: portMap}, &container.HostConfig{PortBindings: portBindings}, nil, "nats-benchmark")
+	if err != nil {
+		log.Printf("Failed to create container %s: %s", gnatsd, err.Error())
+		return "", err
+	}
+	n.containerID = container.ID
+
+	err = cli.ContainerStart(ctx, container.ID, types.ContainerStartOptions{})
 	if err != nil {
 		log.Printf("Failed to start container %s: %s", gnatsd, err.Error())
 		return "", err
 	}
 
-	log.Printf("Started container %s: %s", gnatsd, containerID)
-	n.containerID = string(containerID)
-	return string(containerID), nil
+	log.Printf("Started container %s: %s", gnatsd, container.ID)
+	n.containerID = string(container.ID)
+	return string(container.ID), nil
 }
 
 // Stop will stop the message broker.
 func (n *Broker) Stop() (interface{}, error) {
-	containerID, err := exec.Command("/bin/sh", "-c",
-		fmt.Sprintf("docker kill %s", n.containerID)).Output()
+	cli, err := client.NewEnvClient()
+	ctx := context.Background()
+
+	timeout := 30 * time.Second
+	cli.ContainerStop(ctx, n.containerID, &timeout)
 	if err != nil {
 		log.Printf("Failed to stop container %s: %s", gnatsd, err.Error())
 		return "", err
 	}
 
 	log.Printf("Stopped container %s: %s", gnatsd, n.containerID)
+	err = cli.ContainerRemove(ctx, "nats-benchmark", types.ContainerRemoveOptions{Force: true})
 	n.containerID = ""
-	return string(containerID), nil
+	return string(n.containerID), nil
 }

@@ -2,6 +2,7 @@ package nats
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/nats-io/nats"
@@ -18,6 +19,10 @@ const (
 
 	// Time to delay publishing when we are behind.
 	delay = 1 * time.Millisecond
+
+	// bufferSize is the number of messages we try to publish at a time to
+	// increase throughput
+	bufferSize = 1000
 )
 
 // Peer implements the peer interface for NATS.
@@ -80,12 +85,21 @@ func (n *Peer) Done() {
 
 // Setup prepares the peer for testing.
 func (n *Peer) Setup() {
+	buffer := make([][]byte, bufferSize)
 	go func() {
+		i := 0
 		for {
 			select {
 			case msg := <-n.send:
+				buffer[i] = msg
+				i++
 				if err := n.sendMessage(msg); err != nil {
+					log.Printf(err.Error())
 					n.errors <- err
+				}
+				if i == bufferSize {
+					n.conn.Flush()
+					i = 0
 				}
 			case <-n.done:
 				return
@@ -95,16 +109,18 @@ func (n *Peer) Setup() {
 }
 
 func (n *Peer) sendMessage(message []byte) error {
+	// Currently, n.conn can only see stats of publisher or subscriber not both
+
 	// Check if we are behind by >= 1MB bytes.
-	bytesDeltaOver := n.conn.OutBytes-n.conn.InBytes >= maxBytesBehind
+	//bytesDeltaOver := n.conn.OutBytes-n.conn.InBytes >= maxBytesBehind
 
 	// Check if we are behind by >= 65k msgs.
-	msgsDeltaOver := n.conn.OutMsgs-n.conn.InMsgs >= maxMsgsBehind
+	//msgsDeltaOver := n.conn.OutMsgs-n.conn.InMsgs >= maxMsgsBehind
 
 	// If we are behind on either condition, sleep a bit to catch up receiver.
-	if bytesDeltaOver || msgsDeltaOver {
+	/*if bytesDeltaOver || msgsDeltaOver {
 		time.Sleep(delay)
-	}
+	}*/
 
 	return n.conn.Publish(subject, message)
 }

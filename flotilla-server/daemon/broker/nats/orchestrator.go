@@ -28,7 +28,7 @@ func (n *Broker) Start(host, port string) (interface{}, error) {
 
 	_ = cli.ContainerRemove(ctx, "nats-benchmark", types.ContainerRemoveOptions{Force: true})
 
-	portMap, portBindings, err := nat.ParsePortSpecs([]string{"4222:4222/tcp", "6222:6222/tcp"})
+	portMap, portBindings, err := nat.ParsePortSpecs([]string{"4222:4222/tcp", "6222:6222/tcp", "8222:8222/tcp"})
 
 	container, err := cli.ContainerCreate(ctx, &container.Config{Image: "nats", ExposedPorts: portMap}, &container.HostConfig{PortBindings: portBindings}, nil, "nats-benchmark")
 	if err != nil {

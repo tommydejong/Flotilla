@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	zookeeper     = "jplock/zookeeper:3.4.6"
+	zookeeper     = "zookeeper"
 	zookeeperCmd  = "docker run -d -p %s:%s %s"
 	zookeeperPort = "2181"
 	kafka         = "ches/kafka"

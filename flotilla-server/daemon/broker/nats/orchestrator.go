@@ -1,7 +1,6 @@
 package nats
 
 import (
-	"context"
 	"log"
 	"time"
 
@@ -9,6 +8,7 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
+	"golang.org/x/net/context"
 )
 
 const (

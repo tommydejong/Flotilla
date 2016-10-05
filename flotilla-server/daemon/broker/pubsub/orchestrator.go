@@ -66,6 +66,10 @@ func (c *Broker) Stop() (interface{}, error) {
 }
 
 func newClient(ctx context.Context, projectID string) (*pubsub.Client, error) {
+	if ctx.Err != nil {
+		return &pubsub.Client{}, errors.New("Invalid context.")
+	}
+
 	if projectID == "" {
 		return &pubsub.Client{}, errors.New("project id not provided")
 	}

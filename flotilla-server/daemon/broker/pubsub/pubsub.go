@@ -2,7 +2,6 @@ package pubsub
 
 import (
 	"fmt"
-	"log"
 	"strings"
 	"sync/atomic"
 
@@ -39,13 +38,13 @@ type Peer struct {
 // Pub/Sub.
 func NewPeer(projectID string) (*Peer, error) {
 	ctx := context.Background()
-	client, err := newClient(ctx, projectID)
+	natsClient, err := newClient(ctx, projectID)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Peer{
-		client:   client,
+		client:   natsClient,
 		context:  ctx,
 		messages: make(chan []byte, 10000),
 		acks:     make(chan []string, 100),
@@ -73,9 +72,7 @@ func (c *Peer) Subscribe() error {
 		return fmt.Errorf("Subscription %s already exists", c.subscription)
 	}
 
-	topic := c.client.Topic(topicName)
-
-	if _, err := c.client.CreateSubscription(c.context, c.subscription, topic, 0, nil); err != nil {
+	if _, err := c.client.CreateSubscription(c.context, c.subscription, c.client.Topic(topicName), 0, nil); err != nil {
 		return err
 	}
 
@@ -90,13 +87,15 @@ func (c *Peer) Subscribe() error {
 				continue
 			}
 
-			ids := make([]string, 0)
+			ids := make([]string, batchSize)
 			i := 0
-			for message, err := messages.Next(); err != pubsub.Done; message, err = messages.Next() {
+			message, messageErr := messages.Next()
+			for messageErr != pubsub.Done {
 				ids[i] = message.ID
 				c.messages <- message.Data
-				message.Done(true)
+				//message.Done(true)
 				i++
+				message, messageErr = messages.Next()
 			}
 			c.acks <- ids
 		}
@@ -138,14 +137,13 @@ func (c *Peer) Setup() {
 				buffer[i] = &pubsub.Message{Data: msg}
 				i++
 				if i == batchSize {
-					if _, err := topic.Publish(c.context, buffer[i]); err != nil {
+					if _, err := topic.Publish(c.context, buffer...); err != nil {
 						c.errors <- err
 					}
 					i = 0
 				}
 			case <-c.done:
 				if i > 0 {
-
 					if _, err := topic.Publish(c.context, buffer[0:i]...); err != nil {
 						c.errors <- err
 					}
@@ -171,9 +169,9 @@ func (c *Peer) ack() {
 		select {
 		case ids := <-c.acks:
 			if len(ids) > 0 {
-				if err := pubsub.Done; err != nil {
-					log.Println("Failed to ack messages")
-				}
+				//if err := pubsub.Ack(c.context, c.subscription, ids...); err != nil {
+				//	log.Println("Failed to ack messages")
+				//}
 			}
 		case <-c.ackDone:
 			return

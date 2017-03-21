@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/olekukonko/tablewriter"
-	"github.com/tylertreat/Flotilla/flotilla-client/broker"
+	"github.com/v1n337/flotilla/flotilla-client/broker"
 )
 
 const (

@@ -74,8 +74,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	fmt.Println("About to begin")
 	start := time.Now()
+	fmt.Println("Before runBenchmark call")
 	results, err := runBenchmark(client)
+	fmt.Println("After runBenchmark call")
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

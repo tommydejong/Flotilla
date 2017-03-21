@@ -22,11 +22,9 @@ Flotilla supports several message brokers out of the box:
 - [Beanstalkd](http://kr.github.io/beanstalkd/)
 - [NATS](http://nats.io/)
 - [Kafka](http://kafka.apache.org/)
-- [Kestrel](http://twitter.github.io/kestrel/)
 - [ActiveMQ](http://activemq.apache.org/)
 - [RabbitMQ](http://www.rabbitmq.com/)
 - [NSQ](http://nsq.io/)
-- [Google Cloud Pub/Sub](https://cloud.google.com/pubsub/docs)
 
 ## Installation
 
@@ -35,13 +33,13 @@ Flotilla consists of two binaries: the server daemon and client. The daemon runs
 To install the daemon, run:
 
 ```bash
-$ go get github.com/tylertreat/flotilla/flotilla-server
+$ go get github.com/v1n337/flotilla/flotilla-server
 ```
 
 To install the client, run:
 
 ```bash
-$ go get github.com/tylertreat/flotilla/flotilla-client
+$ go get github.com/v1n337/flotilla/flotilla-client
 ```
 
 ## Usage

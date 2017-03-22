@@ -13,10 +13,6 @@ const defaultPort = 9500
 func main() {
 	var (
 		port            = flag.Int("port", defaultPort, "daemon port")
-		gCloudProjectID = flag.String("gcloud-project-id", "",
-			"Google Cloud project id (needed for Cloud Pub/Sub)")
-		gCloudJSONKey = flag.String("gcloud-json-key", "",
-			"Google Cloud project JSON key file (needed for Cloud Pub/Sub)")
 	)
 	flag.Parse()
 	runtime.GOMAXPROCS(runtime.NumCPU())

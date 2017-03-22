@@ -17,10 +17,7 @@ func main() {
 	flag.Parse()
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
-	config := &daemon.Config{
-		GoogleCloudProjectID: *gCloudProjectID,
-		GoogleCloudJSONKey:   *gCloudJSONKey,
-	}
+	config := &daemon.Config{}
 
 	d, err := daemon.NewDaemon(config)
 	if err != nil {
@@ -29,6 +26,7 @@ func main() {
 
 	fmt.Printf("Flotilla daemon started on port %d...\n", *port)
 	if err := d.Start(*port); err != nil {
+		fmt.Println(err)
 		panic(err)
 	}
 }

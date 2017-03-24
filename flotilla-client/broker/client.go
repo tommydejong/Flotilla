@@ -25,7 +25,7 @@ const (
 	results          operation = "results"
 	teardown         operation = "teardown"
 	resultsSleep               = time.Second
-	sendRecvDeadline           = 5 * time.Second
+	sendRecvDeadline           = 60 * time.Second
 )
 
 type request struct {
@@ -186,6 +186,7 @@ func (c *Client) Start() ([]*ResultContainer, error) {
 	if err := c.startBroker(); err != nil {
 		return nil, fmt.Errorf("Failed to start broker: %s", err.Error())
 	}
+	fmt.Println("Broker started")
 
 	// Allow some time for broker startup.
 	time.Sleep(time.Duration(c.Benchmark.StartupSleep) * time.Second)
@@ -209,6 +210,7 @@ func (c *Client) Start() ([]*ResultContainer, error) {
 }
 
 func (c *Client) startBroker() error {
+	fmt.Println("Sending request to start broker")
 	resp, err := sendRequest(c.brokerd, request{
 		Operation: start,
 		Broker:    c.Benchmark.BrokerName,
@@ -348,25 +350,33 @@ func (c *Client) stopBroker() error {
 }
 
 func sendRequest(s mangos.Socket, request request) (*response, error) {
+	fmt.Println("Creating request JSON ", request)
 	requestJSON, err := json.Marshal(request)
+	fmt.Println("Created request JSON")
 	if err != nil {
 		// This is not recoverable.
 		panic(err)
 	}
 
+	fmt.Println("About to send request JSON")
 	if err := s.Send(requestJSON); err != nil {
+		fmt.Println("error: %s", err)
 		return nil, err
 	}
+	fmt.Println("Sent request JSON")
 
 	rep, err := s.Recv()
 	if err != nil {
+		fmt.Println("error: ", err)
 		return nil, err
 	}
+	fmt.Println("Received response JSON")
 
 	var resp response
 	if err := json.Unmarshal(rep, &resp); err != nil {
 		return nil, err
 	}
+	fmt.Println("Unmarshalled response JSON")
 
 	return &resp, nil
 }

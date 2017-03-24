@@ -17,12 +17,12 @@ import (
 const (
 	defaultDaemonPort    = "9500"
 	defaultBrokerPort    = "5000"
-	defaultNumMessages   = 500000
-	defaultMessageSize   = 1000
+	defaultNumMessages   = 500
+	defaultMessageSize   = 10
 	defaultNumProducers  = 1
 	defaultNumConsumers  = 1
-	defaultStartupSleep  = 8
-	defaultDaemonTimeout = 5
+	defaultStartupSleep  = 90
+	defaultDaemonTimeout = 30
 	defaultHost          = "localhost"
 	defaultDaemonHost    = defaultHost + ":" + defaultDaemonPort
 )
@@ -31,11 +31,9 @@ var brokers = []string{
 	"beanstalkd",
 	"nats",
 	"kafka",
-	"kestrel",
 	"activemq",
 	"rabbitmq",
 	"nsq",
-	"pubsub",
 }
 
 func main() {

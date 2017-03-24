@@ -8,18 +8,13 @@ import (
 )
 
 const (
-	zookeeper     = "jplock/zookeeper:3.4.6"
+	zookeeper     = "zookeeper"
 	zookeeperCmd  = "docker run -d -p %s:%s %s"
 	zookeeperPort = "2181"
 	kafka         = "ches/kafka"
 	kafkaPort     = "9092"
 	jmxPort       = "7203"
-	// TODO: Use --link.
-	kafkaCmd = `docker run -d \
-	                     -h %s \
-	                     -p %s:%s -p %s:%s \
-	                     -e EXPOSED_HOST=%s \
-						 -e ZOOKEEPER_IP=%s %s`
+	kafkaCmd	  = "docker run -d --hostname %s --publish %s:%s --publish %s:%s --env KAFKA_ADVERTISED_HOST_NAME=%s --env ZOOKEEPER_IP=%s %s"
 )
 
 // Broker implements the broker interface for Kafka.
@@ -35,6 +30,7 @@ func (k *Broker) Start(host, port string) (interface{}, error) {
 	}
 
 	cmd := fmt.Sprintf(zookeeperCmd, zookeeperPort, zookeeperPort, zookeeper)
+	log.Printf("zookeeperCmd: %s", cmd)
 	zkContainerID, err := exec.Command("/bin/sh", "-c", cmd).Output()
 	if err != nil {
 		log.Printf("Failed to start container %s: %s", zookeeper, err.Error())
@@ -42,7 +38,9 @@ func (k *Broker) Start(host, port string) (interface{}, error) {
 	}
 	log.Printf("Started container %s: %s", zookeeper, zkContainerID)
 
-	cmd = fmt.Sprintf(kafkaCmd, host, kafkaPort, kafkaPort, jmxPort, jmxPort, host, host, kafka)
+	localhostIP := "127.0.0.1"
+	cmd = fmt.Sprintf(kafkaCmd, host, kafkaPort, kafkaPort, jmxPort, jmxPort, localhostIP, localhostIP, kafka)
+	log.Printf("kafkaCmd: %s", cmd)
 	kafkaContainerID, err := exec.Command("/bin/sh", "-c", cmd).Output()
 	if err != nil {
 		log.Printf("Failed to start container %s: %s", kafka, err.Error())
@@ -66,14 +64,15 @@ func (k *Broker) Start(host, port string) (interface{}, error) {
 func (k *Broker) Stop() (interface{}, error) {
 	_, err := exec.Command("/bin/sh", "-c", fmt.Sprintf("docker kill %s", k.zookeeperContainerID)).Output()
 	if err != nil {
-		log.Printf("Failed to stop container %s: %s", zookeeper, err.Error())
+		log.Printf("Failed to stop container %s: %s", zookeeper, err)
 	} else {
 		log.Printf("Stopped container %s: %s", zookeeper, k.zookeeperContainerID)
 	}
 
 	kafkaContainerID, e := exec.Command("/bin/sh", "-c", fmt.Sprintf("docker kill %s", k.kafkaContainerID)).Output()
 	if e != nil {
-		log.Printf("Failed to stop container %s: %s", kafka, err.Error())
+		log.Printf("err: %s", err)
+		log.Printf("Failed to stop container %s", kafka)
 		err = e
 	} else {
 		log.Printf("Stopped container %s: %s", kafka, k.kafkaContainerID)

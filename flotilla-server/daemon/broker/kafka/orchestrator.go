@@ -9,12 +9,12 @@ import (
 
 const (
 	zookeeper     = "zookeeper"
-	zookeeperCmd  = "docker run -d -p %s:%s %s"
+	zookeeperCmd  = "docker run -d --name zookeeper -p %s:%s %s"
 	zookeeperPort = "2181"
 	kafka         = "ches/kafka"
 	kafkaPort     = "9092"
 	jmxPort       = "7203"
-	kafkaCmd	  = "docker run -d --hostname %s --publish %s:%s --publish %s:%s --env KAFKA_ADVERTISED_HOST_NAME=%s --env ZOOKEEPER_IP=%s %s"
+	kafkaCmd	  = "docker run -d --link zookeeper:zookeeper --hostname %s --publish %s:%s --publish %s:%s --env KAFKA_ADVERTISED_HOST_NAME=%s --env ZOOKEEPER_IP=%s %s"
 )
 
 // Broker implements the broker interface for Kafka.

@@ -25,7 +25,7 @@ const (
 	results          operation = "results"
 	teardown         operation = "teardown"
 	resultsSleep               = time.Second
-	sendRecvDeadline           = 60 * time.Second
+	sendRecvDeadline           = 20 * time.Second
 )
 
 type request struct {
@@ -350,33 +350,33 @@ func (c *Client) stopBroker() error {
 }
 
 func sendRequest(s mangos.Socket, request request) (*response, error) {
-	fmt.Println("Creating request JSON ", request)
+	// fmt.Println("Request JSON ", request)
 	requestJSON, err := json.Marshal(request)
-	fmt.Println("Created request JSON")
+	// fmt.Println("Created request JSON")
 	if err != nil {
 		// This is not recoverable.
 		panic(err)
 	}
 
-	fmt.Println("About to send request JSON")
+	// fmt.Println("About to send request JSON")
 	if err := s.Send(requestJSON); err != nil {
 		fmt.Println("error: %s", err)
 		return nil, err
 	}
-	fmt.Println("Sent request JSON")
+	// fmt.Println("Sent request JSON")
 
 	rep, err := s.Recv()
 	if err != nil {
 		fmt.Println("error: ", err)
 		return nil, err
 	}
-	fmt.Println("Received response JSON")
+	// fmt.Println("Received response JSON")
 
 	var resp response
 	if err := json.Unmarshal(rep, &resp); err != nil {
 		return nil, err
 	}
-	fmt.Println("Unmarshalled response JSON")
+	// fmt.Println("Unmarshalled response JSON")
 
 	return &resp, nil
 }

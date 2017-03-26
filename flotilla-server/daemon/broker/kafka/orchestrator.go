@@ -55,7 +55,7 @@ func (k *Broker) Start(host, port string) (interface{}, error) {
 	// NOTE: Leader election can take a while. For now, just sleep to try to
 	// ensure the cluster is ready. Is there a way to avoid this or make it
 	// better?
-	time.Sleep(time.Second * 5)
+	time.Sleep(time.Second * 15)
 	log.Printf("Leader election complete")
 
 	return string(kafkaContainerID), nil

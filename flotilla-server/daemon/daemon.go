@@ -177,6 +177,9 @@ func (d *Daemon) processRequest(req request) response {
 		response response
 		err      error
 	)
+
+	log.Println("Received request %s", req)
+
 	switch req.Operation {
 	case start:
 		response.Result, err = d.processBrokerStart(req.Broker, req.Host, req.Port)

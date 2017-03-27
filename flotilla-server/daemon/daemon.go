@@ -177,8 +177,7 @@ func (d *Daemon) processRequest(req request) response {
 		response response
 		err      error
 	)
-
-	log.Println("Received request %s", req)
+	// log.Println("Received request %s", req)
 
 	switch req.Operation {
 	case start:

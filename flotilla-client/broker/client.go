@@ -350,7 +350,7 @@ func (c *Client) stopBroker() error {
 }
 
 func sendRequest(s mangos.Socket, request request) (*response, error) {
-	fmt.Println("Request JSON ", request)
+	// fmt.Println("Request JSON ", request)
 	requestJSON, err := json.Marshal(request)
 	// fmt.Println("Created request JSON")
 	if err != nil {
@@ -370,7 +370,7 @@ func sendRequest(s mangos.Socket, request request) (*response, error) {
 		fmt.Println("error: ", err)
 		return nil, err
 	}
-	fmt.Println("Received response JSON")
+	// fmt.Println("Received response JSON")
 
 	var resp response
 	if err := json.Unmarshal(rep, &resp); err != nil {

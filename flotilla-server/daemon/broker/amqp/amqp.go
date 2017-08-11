@@ -1,8 +1,8 @@
 package amqp
 
 import (
-	"github.com/streadway/amqp"
 	"github.com/jack0/Flotilla/flotilla-server/daemon/broker"
+	"github.com/streadway/amqp"
 )
 
 const (

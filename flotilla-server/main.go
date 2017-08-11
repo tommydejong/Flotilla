@@ -12,19 +12,12 @@ const defaultPort = 9500
 
 func main() {
 	var (
-		port            = flag.Int("port", defaultPort, "daemon port")
-		gCloudProjectID = flag.String("gcloud-project-id", "",
-			"Google Cloud project id (needed for Cloud Pub/Sub)")
-		gCloudJSONKey = flag.String("gcloud-json-key", "",
-			"Google Cloud project JSON key file (needed for Cloud Pub/Sub)")
+		port = flag.Int("port", defaultPort, "daemon port")
 	)
 	flag.Parse()
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
-	config := &daemon.Config{
-		GoogleCloudProjectID: *gCloudProjectID,
-		GoogleCloudJSONKey:   *gCloudJSONKey,
-	}
+	config := &daemon.Config{}
 
 	d, err := daemon.NewDaemon(config)
 	if err != nil {
@@ -33,6 +26,7 @@ func main() {
 
 	fmt.Printf("Flotilla daemon started on port %d...\n", *port)
 	if err := d.Start(*port); err != nil {
+		fmt.Println(err)
 		panic(err)
 	}
 }

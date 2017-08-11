@@ -18,6 +18,9 @@ type publisher struct {
 }
 
 func (p *publisher) start() {
+
+	log.Println("Received request to start Publisher")
+
 	p.Setup()
 	defer p.Done()
 

@@ -10,19 +10,19 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/olekukonko/tablewriter"
 	"github.com/jack0/Flotilla/flotilla-client/broker"
+	"github.com/olekukonko/tablewriter"
 )
 
 const (
 	defaultDaemonPort    = "9500"
 	defaultBrokerPort    = "5000"
-	defaultNumMessages   = 500000
-	defaultMessageSize   = 1000
+	defaultNumMessages   = 500
+	defaultMessageSize   = 10
 	defaultNumProducers  = 1
 	defaultNumConsumers  = 1
-	defaultStartupSleep  = 8
-	defaultDaemonTimeout = 5
+	defaultStartupSleep  = 90
+	defaultDaemonTimeout = 60
 	defaultHost          = "localhost"
 	defaultDaemonHost    = defaultHost + ":" + defaultDaemonPort
 )
@@ -31,11 +31,9 @@ var brokers = []string{
 	"beanstalkd",
 	"nats",
 	"kafka",
-	"kestrel",
 	"activemq",
 	"rabbitmq",
 	"nsq",
-	"pubsub",
 }
 
 func main() {
@@ -78,7 +76,7 @@ func main() {
 	results, err := runBenchmark(client)
 	if err != nil {
 		fmt.Println(err)
-		os.Exit(1)
+		// os.Exit(1)
 	}
 	elapsed := time.Since(start)
 

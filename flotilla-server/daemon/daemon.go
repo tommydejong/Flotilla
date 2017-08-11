@@ -16,7 +16,6 @@ import (
 	"github.com/jack0/Flotilla/flotilla-server/daemon/broker/kafka"
 	"github.com/jack0/Flotilla/flotilla-server/daemon/broker/nats"
 	"github.com/jack0/Flotilla/flotilla-server/daemon/broker/nsq"
-	"github.com/jack0/Flotilla/flotilla-server/daemon/broker/pubsub"
 )
 
 type daemon string
@@ -34,13 +33,12 @@ const (
 
 // These are supported message brokers.
 const (
-	NATS        = "nats"
-	Beanstalkd  = "beanstalkd"
-	Kafka       = "kafka"
-	ActiveMQ    = "activemq"
-	RabbitMQ    = "rabbitmq"
-	NSQ         = "nsq"
-	CloudPubSub = "pubsub"
+	NATS       = "nats"
+	Beanstalkd = "beanstalkd"
+	Kafka      = "kafka"
+	ActiveMQ   = "activemq"
+	RabbitMQ   = "rabbitmq"
+	NSQ        = "nsq"
 )
 
 type request struct {
@@ -179,6 +177,8 @@ func (d *Daemon) processRequest(req request) response {
 		response response
 		err      error
 	)
+	// log.Println("Received request %s", req)
+
 	switch req.Operation {
 	case start:
 		response.Result, err = d.processBrokerStart(req.Broker, req.Host, req.Port)
@@ -228,10 +228,6 @@ func (d *Daemon) processBrokerStart(broker, host, port string) (interface{}, err
 		d.broker = &rabbitmq.Broker{}
 	case NSQ:
 		d.broker = &nsq.Broker{}
-	case CloudPubSub:
-		d.broker = &pubsub.Broker{
-			ProjectID: d.config.GoogleCloudProjectID,
-		}
 	default:
 		return "", fmt.Errorf("Invalid broker %s", broker)
 	}
@@ -354,10 +350,6 @@ func (d *Daemon) newPeer(broker, host string) (peer, error) {
 		return amqp.NewPeer(host)
 	case NSQ:
 		return nsq.NewPeer(host)
-	case CloudPubSub:
-		return pubsub.NewPeer(
-			d.config.GoogleCloudProjectID,
-		)
 	default:
 		return nil, fmt.Errorf("Invalid broker: %s", broker)
 	}

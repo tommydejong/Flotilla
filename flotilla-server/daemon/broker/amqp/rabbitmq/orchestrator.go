@@ -18,6 +18,8 @@ type Broker struct {
 
 // Start will start the message broker and prepare it for testing.
 func (r *Broker) Start(host, port string) (interface{}, error) {
+
+	log.Printf("rabbitMQ cmd: docker run -d -p %s:%s %s", port, internalPort, rabbitMQ)
 	containerID, err := exec.Command("/bin/sh", "-c",
 		fmt.Sprintf("docker run -d -p %s:%s %s", port, internalPort, rabbitMQ)).Output()
 	if err != nil {

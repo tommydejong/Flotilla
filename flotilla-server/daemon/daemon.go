@@ -14,7 +14,6 @@ import (
 	"github.com/jack0/Flotilla/flotilla-server/daemon/broker/amqp/rabbitmq"
 	"github.com/jack0/Flotilla/flotilla-server/daemon/broker/beanstalkd"
 	"github.com/jack0/Flotilla/flotilla-server/daemon/broker/kafka"
-	"github.com/jack0/Flotilla/flotilla-server/daemon/broker/nats"
 	"github.com/jack0/Flotilla/flotilla-server/daemon/broker/nsq"
 )
 

@@ -9,12 +9,12 @@ import (
 	"github.com/go-mangos/mangos"
 	"github.com/go-mangos/mangos/protocol/rep"
 	"github.com/go-mangos/mangos/transport/tcp"
-	"github.com/jack0/Flotilla/flotilla-server/daemon/broker/activemq"
-	"github.com/jack0/Flotilla/flotilla-server/daemon/broker/amqp"
-	"github.com/jack0/Flotilla/flotilla-server/daemon/broker/amqp/rabbitmq"
-	"github.com/jack0/Flotilla/flotilla-server/daemon/broker/beanstalkd"
-	"github.com/jack0/Flotilla/flotilla-server/daemon/broker/kafka"
-	"github.com/jack0/Flotilla/flotilla-server/daemon/broker/nsq"
+	"github.com/tommydejong/Flotilla/flotilla-server/daemon/broker/activemq"
+	"github.com/tommydejong/Flotilla/flotilla-server/daemon/broker/amqp"
+	"github.com/tommydejong/Flotilla/flotilla-server/daemon/broker/amqp/rabbitmq"
+	"github.com/tommydejong/Flotilla/flotilla-server/daemon/broker/beanstalkd"
+	"github.com/tommydejong/Flotilla/flotilla-server/daemon/broker/kafka"
+	"github.com/tommydejong/Flotilla/flotilla-server/daemon/broker/nsq"
 )
 
 type daemon string

@@ -10,7 +10,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/jack0/Flotilla/flotilla-client/broker"
+	"github.com/tommydejong/Flotilla/flotilla-client/broker"
 	"github.com/olekukonko/tablewriter"
 )
 
